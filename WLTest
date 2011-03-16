@@ -5,6 +5,8 @@ if [[ ${1} == '-c' ]]
 	echo "Compiling WLGen..."
 	javac WLGen.java
 	shift 1
+else
+	echo "To recompile WLGen, WLTest -c infile"
 fi
 
 echo "Scanning WL code..."
