@@ -25,6 +25,11 @@ if [[ $1 == '-c' ]]
 	then
 	echo "Compiling WLGen..."
 	javac WLGen.java
+	if [[ $? == 1 ]]
+		then
+		echo "An error occurred while compiling WLGen."
+		quitline
+	fi
 	shift 1
 fi
 
