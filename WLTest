@@ -9,6 +9,13 @@
 #
 ###
 
+echo ""
+echo "WLTest, by Eli Spiro"
+echo "Usage: WLTest [-c] [-i] file"
+echo "Compiles file.wl into a MIPS machine code program and runs it"
+echo "-c to recompile WLGen.java, -i to leave intermediate files after they're created"
+echo ""
+
 if [[ $1 == '-c' ]]
 	then
 	echo "Compiling WLGen..."
@@ -36,7 +43,9 @@ java WLGen < $1.wli > $1.asm
 echo "Assembling MIPS machine code..."
 java cs241.binasm < $1.asm > $1.mips
 echo "Running MIPS program, input from mips.in"
+echo ""
 java mips.twoints $1.mips < mips.in
+echo ""
 
 if [[ $clean == 1 ]]
 	then
