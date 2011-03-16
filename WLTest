@@ -128,4 +128,4 @@ if [[ $clean == 1 ]]
 	rm $1.merl
 	rm print.merl
 	rm final.merl
-f
+fi
