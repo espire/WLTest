@@ -1,5 +1,14 @@
 #!/bin/bash
 
+###
+#
+# WLTest
+# Testing tool for uWaterloo CS 241 assignments 9 and 10
+# Copyright (c) 2011 Eli Spiro
+# Made available under the GNU General Public Licence v3 — see README
+#
+###
+
 if [[ ${1} == '-c' ]]
 	then
 	echo "Compiling WLGen..."
