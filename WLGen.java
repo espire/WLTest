@@ -12,7 +12,7 @@ import java.util.*;
  *
  * IMPORTANT INFO FOR UNIVERSITY OF WATERLOO STUDENTS:
  * If you are a CS 241 student, you are DISALLOWED to gain any benefit from this.
- * That includes copying, modifying, or even reading the code. TURN AWAY NOW!
+ * That includes copying, modifying, or even reading the code. FLY AWAY NOW!
  *
  * If you are not a CS 241 student, you are free to read the code, but you are
  * not free to modify, save, or redistribute it.
@@ -106,7 +106,7 @@ public class WLGen {
         if (t.matches("S BOF procedure EOF")) {
             return prologue + genCode(t.children.get(1)) + epilogue;
         } else if (t
-                .matches("procedure INT WAIN LPAREN dcl COMMA dcl RPAREN LBRACE dcls statements RETURN expr SEMI RBRACE")) {
+			.matches("procedure INT WAIN LPAREN dcl COMMA dcl RPAREN LBRACE dcls statements RETURN expr SEMI RBRACE")) {
             return genCode(t.children.get(11));
 		} else if (t.matches("expr term")) {
             return genCode(t.children.get(0));
@@ -114,6 +114,12 @@ public class WLGen {
             return genCode(t.children.get(0));
         } else if (t.matches("factor ID")) {
             return genCode(t.children.get(0));
+		} else if (t.matches("factor NUM")) {
+			return genCode(t.children.get(0));
+		} else if (t.rule.get(0).equals("NUM")) {
+			String ret = "lis $3\n";
+			ret += (".word " + t.rule.get(1) + " ; load program constant\n");
+			return ret;
 		} else if (t.matches("factor LPAREN expr RPAREN")) {
 			return genCode(t.children.get(1));
         } else if (t.matches("expr expr PLUS term")) {
