@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [[ ${1} == '-c' ]]
+	then
+	echo "Compiling WLGen..."
+	javac WLGen.java
+	shift 1
+fi
+
+echo "Scanning WL code..."
+java cs241.WLScan < $1.wl > $1.scanned
+echo "Parsing WL tokens..."
+java cs241.WLParse < $1.scanned > $1.wli
+echo "Generating MIPS code..."
+java WLGen < $1.wli > $1.asm
+echo "Assembling MIPS machine code..."
+java cs241.binasm < $1.asm > $1.mips
+java mips.twoints $1.mips
