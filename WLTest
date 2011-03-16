@@ -9,6 +9,11 @@
 #
 ###
 
+function quitline {
+	echo ""
+	exit
+}
+
 echo ""
 echo "WLTest, by Eli Spiro"
 echo "Usage: WLTest [-c] [-i] file"
@@ -36,12 +41,36 @@ fi
 
 echo "Scanning WL code..."
 java cs241.WLScan < $1.wl > $1.scanned
+if [[ $? == 1 ]]
+	then
+	echo "An error occurred while scanning."
+	quitline
+fi
+
 echo "Parsing WL tokens..."
 java cs241.WLParse < $1.scanned > $1.wli
+if [[ $? == 1 ]]
+	then
+	echo "An error occurred while parsing."
+	quitline
+fi
+
 echo "Generating MIPS code..."
 java WLGen < $1.wli > $1.asm
+if [[ $? == 1 ]]
+	then
+	echo "An error occurred while generating code."
+	quitline
+fi
+
 echo "Assembling MIPS machine code..."
 java cs241.binasm < $1.asm > $1.mips
+if [[ $? == 1 ]]
+	then
+	echo "An error occurred while assembling."
+	quitline
+fi
+
 echo "Running MIPS program, input from mips.in"
 echo ""
 java mips.twoints $1.mips < mips.in
