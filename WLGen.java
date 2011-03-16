@@ -28,6 +28,9 @@ public class WLGen {
 
     List<String> symbols;
 
+	String prologue = "; PROLOGUE\n; \"constant\" registers:\nlis $4\n.word 4\nlis $11\n.word 11\n\n";
+	String epilogue = "\n; EPILOGUE\n; exit to DOS\njr $31\n";
+
     // Data structure for storing the parse tree.
     public class Tree {
         List<String> rule;
@@ -101,7 +104,7 @@ public class WLGen {
     // Generate the code for the parse tree t.
     String genCode(Tree t) {
         if (t.matches("S BOF procedure EOF")) {
-            return genCode(t.children.get(1)) + "jr $31\n";
+            return prologue + genCode(t.children.get(1)) + epilogue;
         } else if (t
                 .matches("procedure INT WAIN LPAREN dcl COMMA dcl RPAREN LBRACE dcls statements RETURN expr SEMI RBRACE")) {
             return genCode(t.children.get(11));
@@ -113,7 +116,60 @@ public class WLGen {
             return genCode(t.children.get(0));
 		} else if (t.matches("factor LPAREN expr RPAREN")) {
 			return genCode(t.children.get(1));
-        } else if (t.rule.get(0).equals("ID")) {
+        } else if (t.matches("expr expr PLUS term")) {
+			String ret = "; expr PLUS term\n";
+			ret += genCode(t.children.get(2));
+			ret += "sw $3,-4($30)\n";
+			ret += "sub $30,$30,$4 ; push the stack\n";
+			ret += genCode(t.children.get(0));
+			ret += "lw $5,0($30)\n";
+			ret += "add $30,$30,$4 ; pop the stack\n";
+			ret += "add $3,$3,$5 ; result of PLUS\n";
+			return ret;
+		} else if (t.matches("expr expr MINUS term")) {
+			String ret = "; expr MINUS term\n";
+			ret += genCode(t.children.get(2));
+			ret += "sw $3,-4($30)\n";
+			ret += "sub $30,$30,$4 ; push the stack\n";
+			ret += genCode(t.children.get(0));
+			ret += "lw $5,0($30)\n";
+			ret += "add $30,$30,$4 ; pop the stack\n";
+			ret += "sub $3,$3,$5 ; result of MINUS\n";
+			return ret;
+		} else if (t.matches("term term STAR factor")) {
+			String ret = "; term STAR factor\n";
+			ret += genCode(t.children.get(2));
+			ret += "sw $3,-4($30)\n";
+			ret += "sub $30,$30,$4\n";
+			ret += genCode(t.children.get(0));
+			ret += "lw $5,0($30)\n";
+			ret += "add $30,$30,$4\n";
+			ret += "mult $3,$5\n";
+			ret += "mflo $3 ; result of STAR\n";
+			return ret;
+		} else if (t.matches("term term SLASH factor")) {
+			String ret = "; term SLASH factor\n";
+			ret += genCode(t.children.get(2));
+			ret += "sw $3,-4($30)\n";
+			ret += "sub $30,$30,$4\n";
+			ret += genCode(t.children.get(0));
+			ret += "lw $5,0($30)\n";
+			ret += "add $30,$30,$4\n";
+			ret += "div $3,$5\n";
+			ret += "mflo $3 ; result of SLASH\n";
+			return ret;
+		} else if (t.matches("term term PCT factor")) {
+			String ret = "; term PCT factor\n";
+			ret += genCode(t.children.get(2));
+			ret += "sw $3,-4($30)\n";
+			ret += "sub $30,$30,$4\n";
+			ret += genCode(t.children.get(0));
+			ret += "lw $5,0($30)\n";
+			ret += "add $30,$30,$4\n";
+			ret += "div $3,$5\n";
+			ret += "mfhi $3 ; result of PERCENT\n";
+			return ret;
+		} else if (t.rule.get(0).equals("ID")) {
             String name = t.rule.get(1); // variable name
 			for(String s : symbols) { // iterate through the symbol table
 				if(name.equals(s)) { // found our symbol
