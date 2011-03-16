@@ -17,6 +17,7 @@ import java.util.*;
  * If you are not a CS 241 student, you are free to read the code, but you are
  * not free to modify, save, or redistribute it.
  */
+
 public class WLGen {
     Scanner in = new Scanner(System.in);
 
@@ -27,10 +28,13 @@ public class WLGen {
          "RBRACE", "RETURN", "RPAREN", "SEMI", "SLASH", "STAR", "WAIN", "WHILE"));
 
     List<String> symbols;
-
-	String prologue = "; PROLOGUE\n; \"constant\" registers:\nlis $4\n.word 4\nlis $11\n.word 11\n\n";
-	String epilogue = "\n; EPILOGUE\n; exit to DOS\njr $31\n";
-
+	
+	int fullLength = 0;
+	int codeLength = 0;
+	
+	String code;
+	String epilogue;
+	
     // Data structure for storing the parse tree.
     public class Tree {
         List<String> rule;
@@ -101,13 +105,66 @@ public class WLGen {
         System.exit(1); // 1 tells shell there was an error
     }
 
+	// Generate the prologue
+	String genPrologue() {
+		codeLength += 36;
+		String ret = "; PROLOGUE\n";
+		ret += "; merl header:\n";
+		ret += ".import print\n";
+		/*ret += "beq $0,$0,2\n";
+		ret += (".word " + fullLength + "\n");
+		ret += (".word " + codeLength + "\n");
+		ret += "; \"constant\" registers:\n";*/
+		ret += "lis $4\n";
+		ret += ".word 4\n";
+		ret += "lis $8\n";
+		ret += ".word 8\n";
+		ret += "lis $11\n";
+		ret += ".word 11\n\n";
+		return ret;
+	}
+	
+	// Generate the epilogue
+	String genEpilogue() {
+		codeLength += 4;
+		String ret = "\n; EPILOGUE\n; exit to DOS\njr $31\n";
+		/*ret += "; external symbol table:\n";
+		ret += ".word 0x01\n";*/
+		
+		return ret;
+	}
+
     // Generate the code for the parse tree t.
     String genCode(Tree t) {
         if (t.matches("S BOF procedure EOF")) {
-            return prologue + genCode(t.children.get(1)) + epilogue;
+            return genCode(t.children.get(1));
         } else if (t
 			.matches("procedure INT WAIN LPAREN dcl COMMA dcl RPAREN LBRACE dcls statements RETURN expr SEMI RBRACE")) {
-            return genCode(t.children.get(11));
+			String ret = genCode(t.children.get(9));
+			ret += genCode(t.children.get(11));
+            return ret;
+		} else if (t.matches("statements statements statement")) {
+			String ret = "";
+			ret += genCode(t.children.get(0));
+			ret += genCode(t.children.get(1));
+			return ret;
+		} else if (t.matches("statements")) {
+			return "";
+		} else if (t.matches("statement PRINTLN LPAREN expr RPAREN SEMI")) {
+			codeLength += 36;
+			String ret = "; PRINTLN LPAREN expr RPAREN SEMI\n";
+			ret += genCode(t.children.get(2));
+			ret += "sw $1,-4($30)\n";
+			ret += "sw $31,-8($30)\n";
+			ret += "sub $30,$30,$8 ; push the stack\n";
+			ret += "add $1,$3,$0 ; prepare input to print\n";
+			ret += "lis $29\n";
+			ret += ".word print\n";
+			ret += "jalr $29\n ; call print\n";
+			ret += "add $30,$30,$8\n";
+			ret += "lw $1,-4($30)\n";
+			ret += "lw $31,-8($30)\n ; pop the stack\n";
+			return ret;
 		} else if (t.matches("expr term")) {
             return genCode(t.children.get(0));
         } else if (t.matches("term factor")) {
@@ -117,12 +174,14 @@ public class WLGen {
 		} else if (t.matches("factor NUM")) {
 			return genCode(t.children.get(0));
 		} else if (t.rule.get(0).equals("NUM")) {
+			codeLength += 8;
 			String ret = "lis $3\n";
 			ret += (".word " + t.rule.get(1) + " ; load program constant\n");
 			return ret;
 		} else if (t.matches("factor LPAREN expr RPAREN")) {
 			return genCode(t.children.get(1));
         } else if (t.matches("expr expr PLUS term")) {
+			codeLength += 24;
 			String ret = "; expr PLUS term\n";
 			ret += genCode(t.children.get(2));
 			ret += "sw $3,-4($30)\n";
@@ -133,6 +192,7 @@ public class WLGen {
 			ret += "add $3,$3,$5 ; result of PLUS\n";
 			return ret;
 		} else if (t.matches("expr expr MINUS term")) {
+			codeLength += 24;
 			String ret = "; expr MINUS term\n";
 			ret += genCode(t.children.get(2));
 			ret += "sw $3,-4($30)\n";
@@ -143,6 +203,7 @@ public class WLGen {
 			ret += "sub $3,$3,$5 ; result of MINUS\n";
 			return ret;
 		} else if (t.matches("term term STAR factor")) {
+			codeLength += 28;
 			String ret = "; term STAR factor\n";
 			ret += genCode(t.children.get(2));
 			ret += "sw $3,-4($30)\n";
@@ -154,6 +215,7 @@ public class WLGen {
 			ret += "mflo $3 ; result of STAR\n";
 			return ret;
 		} else if (t.matches("term term SLASH factor")) {
+			codeLength += 28;
 			String ret = "; term SLASH factor\n";
 			ret += genCode(t.children.get(2));
 			ret += "sw $3,-4($30)\n";
@@ -165,6 +227,7 @@ public class WLGen {
 			ret += "mflo $3 ; result of SLASH\n";
 			return ret;
 		} else if (t.matches("term term PCT factor")) {
+			codeLength += 28;
 			String ret = "; term PCT factor\n";
 			ret += genCode(t.children.get(2));
 			ret += "sw $3,-4($30)\n";
@@ -176,6 +239,7 @@ public class WLGen {
 			ret += "mfhi $3 ; result of PERCENT\n";
 			return ret;
 		} else if (t.rule.get(0).equals("ID")) {
+			codeLength += 4;
             String name = t.rule.get(1); // variable name
 			for(String s : symbols) { // iterate through the symbol table
 				if(name.equals(s)) { // found our symbol
@@ -220,6 +284,8 @@ public class WLGen {
         Tree parseTree = readParse("S");
         symbols = genSymbols(parseTree);
 		symbolDuplicates(symbols);
-        System.out.print(genCode(parseTree));
+		code = genCode(parseTree);
+		epilogue = genEpilogue();
+        System.out.print(genPrologue() + code + epilogue);
     }
 }
