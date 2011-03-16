@@ -105,12 +105,14 @@ public class WLGen {
         } else if (t
                 .matches("procedure INT WAIN LPAREN dcl COMMA dcl RPAREN LBRACE dcls statements RETURN expr SEMI RBRACE")) {
             return genCode(t.children.get(11));
-        } else if (t.matches("expr term")) {
+		} else if (t.matches("expr term")) {
             return genCode(t.children.get(0));
         } else if (t.matches("term factor")) {
             return genCode(t.children.get(0));
         } else if (t.matches("factor ID")) {
             return genCode(t.children.get(0));
+		} else if (t.matches("factor LPAREN expr RPAREN")) {
+			return genCode(t.children.get(1));
         } else if (t.rule.get(0).equals("ID")) {
             String name = t.rule.get(1); // variable name
 			for(String s : symbols) { // iterate through the symbol table
