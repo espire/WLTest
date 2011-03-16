@@ -16,11 +16,12 @@ function quitline {
 
 echo ""
 echo "WLTest, by Eli Spiro"
-echo "Usage: WLTest [-c] [-p] [-i] file"
+echo "Usage: WLTest [-c] [-p] [-i] [-m] file"
 echo "Compiles file.wl into a MIPS machine code program and runs it"
 echo "-c to recompile WLGen.java"
 echo "-p to print the generated MIPS assembly code"
 echo "-i to leave intermediate files after they're created"
+echo "-m to print the final MERL file"
 echo ""
 
 if [[ $1 == '-c' ]]
@@ -49,6 +50,14 @@ if [[ $1 == '-i' ]]
 	shift 1
 else
 	clean=1
+fi
+
+if [[ $1 == '-m' ]]
+	then
+	merl=1
+	shift 1
+else
+	merl=0
 fi
 
 echo "Scanning WL code..."
@@ -82,16 +91,33 @@ if [[ $print == 1 ]]
 fi
 
 echo "Assembling MIPS machine code..."
-java cs241.binasm < $1.asm > $1.mips
+java cs241.linkasm < print.asm > print.merl
+java cs241.linkasm < $1.asm > $1.merl
 if [[ $? == 1 ]]
 	then
 	echo "An error occurred while assembling."
 	quitline
 fi
 
+echo "Linking MERL executables..."
+linker $1.merl print.merl > final.merl
+if [[ $? == 1 ]]
+	then
+	echo "An error occurred while linking."
+	quitline
+fi
+
+echo ""
+
+if [[ $merl == 1 ]]
+	then
+	printmerl < final.merl
+	echo ""
+fi
+
 echo "Running MIPS program, input from mips.in"
 echo ""
-java mips.twoints $1.mips < mips.in
+java mips.twoints final.merl < mips.in
 echo ""
 
 if [[ $clean == 1 ]]
@@ -99,5 +125,7 @@ if [[ $clean == 1 ]]
 	rm $1.scanned
 	rm $1.wli
 	rm $1.asm
-	rm $1.mips
-fi
+	rm $1.merl
+	rm print.merl
+	rm final.merl
+f
