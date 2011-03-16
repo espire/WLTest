@@ -16,9 +16,11 @@ function quitline {
 
 echo ""
 echo "WLTest, by Eli Spiro"
-echo "Usage: WLTest [-c] [-i] file"
+echo "Usage: WLTest [-c] [-p] [-i] file"
 echo "Compiles file.wl into a MIPS machine code program and runs it"
-echo "-c to recompile WLGen.java, -i to leave intermediate files after they're created"
+echo "-c to recompile WLGen.java"
+echo "-p to print the generated MIPS assembly code"
+echo "-i to leave intermediate files after they're created"
 echo ""
 
 if [[ $1 == '-c' ]]
@@ -31,6 +33,14 @@ if [[ $1 == '-c' ]]
 		quitline
 	fi
 	shift 1
+fi
+
+if [[ $1 == '-p' ]]
+	then
+	print=1
+	shift 1
+else
+	print=0
 fi
 
 if [[ $1 == '-i' ]]
@@ -63,6 +73,12 @@ if [[ $? == 1 ]]
 	then
 	echo "An error occurred while generating code."
 	quitline
+fi
+
+if [[ $print == 1 ]]
+	then
+	cat $1.asm
+	echo ""
 fi
 
 echo "Assembling MIPS machine code..."
