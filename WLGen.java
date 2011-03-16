@@ -95,7 +95,7 @@ public class WLGen {
     // Print an error message and exit the program.
     void bail(String msg) {
         System.err.println("ERROR: " + msg);
-        System.exit(0);
+        System.exit(1); // 1 tells shell there was an error
     }
 
     // Generate the code for the parse tree t.
