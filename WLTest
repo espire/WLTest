@@ -26,4 +26,5 @@ echo "Generating MIPS code..."
 java WLGen < $1.wli > $1.asm
 echo "Assembling MIPS machine code..."
 java cs241.binasm < $1.asm > $1.mips
-java mips.twoints $1.mips
+echo "Running MIPS program, input from mips.in"
+java mips.twoints $1.mips < mips.in
