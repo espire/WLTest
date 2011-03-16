@@ -75,8 +75,9 @@ public class WLGen {
         } else if (t.matches("procedure INT WAIN LPAREN dcl COMMA dcl RPAREN LBRACE dcls statements RETURN expr SEMI RBRACE")) {
             List<String> ret = new ArrayList<String>();
             // recurse on dcl and dcl
-            ret.addAll(genSymbols(t.children.get(3)));
-            ret.addAll(genSymbols(t.children.get(5)));
+            ret.addAll(genSymbols(t.children.get(3))); // first dcl
+            ret.addAll(genSymbols(t.children.get(5))); // second dcl
+			//ret.addAll(genSymbols(t.children.get(8))); // dcls, not until later parts of assignment
             return ret;
         } else if (t.matches("dcl INT ID")) {
             // recurse on ID
@@ -113,19 +114,38 @@ public class WLGen {
         } else if (t.rule.get(0).equals("ID")) {
             String name = t.rule.get(1); // variable name
 			for(String s : symbols) { // iterate through the symbol table
-				if(name.equals(s)) {
-					return "add $3,$0,$1\n";
+				if(name.equals(s)) { // found our symbol
+					if (name.equals(symbols.get(0)))
+						return "add $3,$0,$1\n";
+					if (name.equals(symbols.get(1)))
+						return "add $3,$0,$2\n";
+					return null;
 					// this code DOES NOT fetch the variable from the correct location
 					// it is placeholder code until fetching is implemented
 				} // if
 			} // for
-			bail("symbol already defined: " + name);
+			bail("symbol not found: " + name); // we couldn't find the symbol; abandon ship!
 			return null; // this line will never be executed
         } else {
             bail("unrecognized rule " + t.rule);
             return null;
         }
     }
+
+	void symbolDuplicates(List<String> symbols) {
+		for(String s : symbols) {
+			boolean defined = false; // has the symbol already been defined once in our iteration?
+			for(String t : symbols) { // cartesian comparison of symbols against symbols
+				if(s.equals(t)) { // if we found a match
+					if(defined == true) {
+						bail("symbol already defined: " + s);
+					}
+					else defined = true;
+				} // if
+			} // for : t
+			System.err.println(s);
+		} // for : s
+	} // symbolDuplicates
 
     // Main program
     public static final void main(String args[]) {
@@ -135,9 +155,7 @@ public class WLGen {
     public void go() {
         Tree parseTree = readParse("S");
         symbols = genSymbols(parseTree);
-		for(String s : symbols) {
-			System.err.println(s);
-		}
+		symbolDuplicates(symbols);
         System.out.print(genCode(parseTree));
     }
 }
