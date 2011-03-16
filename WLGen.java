@@ -29,9 +29,6 @@ public class WLGen {
 
     List<String> symbols;
 	
-	int fullLength = 0;
-	int codeLength = 0;
-	
 	String code;
 	String epilogue;
 	
@@ -107,14 +104,9 @@ public class WLGen {
 
 	// Generate the prologue
 	String genPrologue() {
-		codeLength += 36;
 		String ret = "; PROLOGUE\n";
 		ret += "; merl header:\n";
 		ret += ".import print\n";
-		/*ret += "beq $0,$0,2\n";
-		ret += (".word " + fullLength + "\n");
-		ret += (".word " + codeLength + "\n");
-		ret += "; \"constant\" registers:\n";*/
 		ret += "lis $4\n";
 		ret += ".word 4\n";
 		ret += "lis $8\n";
@@ -126,11 +118,7 @@ public class WLGen {
 	
 	// Generate the epilogue
 	String genEpilogue() {
-		codeLength += 4;
 		String ret = "\n; EPILOGUE\n; exit to DOS\njr $31\n";
-		/*ret += "; external symbol table:\n";
-		ret += ".word 0x01\n";*/
-		
 		return ret;
 	}
 
@@ -151,7 +139,6 @@ public class WLGen {
 		} else if (t.matches("statements")) {
 			return "";
 		} else if (t.matches("statement PRINTLN LPAREN expr RPAREN SEMI")) {
-			codeLength += 36;
 			String ret = "; PRINTLN LPAREN expr RPAREN SEMI\n";
 			ret += genCode(t.children.get(2));
 			ret += "sw $1,-4($30)\n";
@@ -174,14 +161,12 @@ public class WLGen {
 		} else if (t.matches("factor NUM")) {
 			return genCode(t.children.get(0));
 		} else if (t.rule.get(0).equals("NUM")) {
-			codeLength += 8;
 			String ret = "lis $3\n";
 			ret += (".word " + t.rule.get(1) + " ; load program constant\n");
 			return ret;
 		} else if (t.matches("factor LPAREN expr RPAREN")) {
 			return genCode(t.children.get(1));
         } else if (t.matches("expr expr PLUS term")) {
-			codeLength += 24;
 			String ret = "; expr PLUS term\n";
 			ret += genCode(t.children.get(2));
 			ret += "sw $3,-4($30)\n";
@@ -192,7 +177,6 @@ public class WLGen {
 			ret += "add $3,$3,$5 ; result of PLUS\n";
 			return ret;
 		} else if (t.matches("expr expr MINUS term")) {
-			codeLength += 24;
 			String ret = "; expr MINUS term\n";
 			ret += genCode(t.children.get(2));
 			ret += "sw $3,-4($30)\n";
@@ -203,7 +187,6 @@ public class WLGen {
 			ret += "sub $3,$3,$5 ; result of MINUS\n";
 			return ret;
 		} else if (t.matches("term term STAR factor")) {
-			codeLength += 28;
 			String ret = "; term STAR factor\n";
 			ret += genCode(t.children.get(2));
 			ret += "sw $3,-4($30)\n";
@@ -215,7 +198,6 @@ public class WLGen {
 			ret += "mflo $3 ; result of STAR\n";
 			return ret;
 		} else if (t.matches("term term SLASH factor")) {
-			codeLength += 28;
 			String ret = "; term SLASH factor\n";
 			ret += genCode(t.children.get(2));
 			ret += "sw $3,-4($30)\n";
@@ -227,7 +209,6 @@ public class WLGen {
 			ret += "mflo $3 ; result of SLASH\n";
 			return ret;
 		} else if (t.matches("term term PCT factor")) {
-			codeLength += 28;
 			String ret = "; term PCT factor\n";
 			ret += genCode(t.children.get(2));
 			ret += "sw $3,-4($30)\n";
@@ -239,7 +220,6 @@ public class WLGen {
 			ret += "mfhi $3 ; result of PERCENT\n";
 			return ret;
 		} else if (t.rule.get(0).equals("ID")) {
-			codeLength += 4;
             String name = t.rule.get(1); // variable name
 			for(String s : symbols) { // iterate through the symbol table
 				if(name.equals(s)) { // found our symbol
