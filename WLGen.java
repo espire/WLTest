@@ -7,6 +7,15 @@ import java.util.*;
  * 
  * Version 20081105.1
  *
+ * Augmented by Eli Spiro for use on said assignments.
+ * Code not originally part of the starter code is copyright (c) Eli Spiro 2011
+ *
+ * IMPORTANT INFO FOR UNIVERSITY OF WATERLOO STUDENTS:
+ * If you are a CS 241 student, you are DISALLOWED to gain any benefit from this.
+ * That includes copying, modifying, or even reading the code. TURN AWAY NOW!
+ *
+ * If you are not a CS 241 student, you are free to read the code, but you are
+ * not free to modify, save, or redistribute it.
  */
 public class WLGen {
     Scanner in = new Scanner(System.in);
