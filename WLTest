@@ -9,13 +9,22 @@
 #
 ###
 
-if [[ ${1} == '-c' ]]
+if [[ $1 == '-c' ]]
 	then
 	echo "Compiling WLGen..."
 	javac WLGen.java
 	shift 1
+#else
+	#echo "To recompile WLGen, -c"
+fi
+
+if [[ $1 == '-i' ]]
+	then
+	clean=0
+	shift 1
 else
-	echo "To recompile WLGen, WLTest -c infile"
+	clean=1
+	#echo "To leave intermediate files, -i"
 fi
 
 echo "Scanning WL code..."
@@ -28,3 +37,11 @@ echo "Assembling MIPS machine code..."
 java cs241.binasm < $1.asm > $1.mips
 echo "Running MIPS program, input from mips.in"
 java mips.twoints $1.mips < mips.in
+
+if [[ $clean == 1 ]]
+	then
+	rm $1.scanned
+	rm $1.wli
+	rm $1.asm
+	rm $1.mips
+fi

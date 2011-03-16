@@ -143,7 +143,7 @@ public class WLGen {
 					else defined = true;
 				} // if
 			} // for : t
-			System.err.println(s);
+			//System.err.println(s); spits out complete symbol table
 		} // for : s
 	} // symbolDuplicates
 
